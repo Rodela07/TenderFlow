@@ -168,7 +168,6 @@ export default function App() {
 
     const processed: UploadedFile[] = [];
     for (const file of newFiles) {
-      // Check MIME + extension
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
       if (!isPdf) {
         addToast(`"${file.name}" ${t('errorNonPdf')}`, 'error');
@@ -221,7 +220,6 @@ export default function App() {
     setMatches((prev) => {
       let next = prev.filter((m) => m.requirementId !== requirementId);
       if (fileId) {
-        // Also remove any existing match for this file to other requirements
         next = next.filter((m) => m.fileId !== fileId);
         next.push({ requirementId, fileId });
       }
@@ -345,7 +343,7 @@ export default function App() {
           const file = new File([blob], name, { type: blob.type });
           fileObjects.push(file);
         } catch {
-          // Ignore individual fetch fails
+          // Ignore
         }
       }
 
@@ -388,7 +386,7 @@ export default function App() {
   }, [files, matches]);
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-[#FF385C]/30 selection:text-white">
+    <div className="w-full min-h-screen flex flex-col items-center selection:bg-[#FF385C]/30 selection:text-white">
       <Header
         voiceEnabled={speech.enabled}
         onVoiceToggle={speech.toggle}
@@ -397,11 +395,11 @@ export default function App() {
 
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+      <main className="w-full max-w-5xl px-4 sm:px-6 py-8 sm:py-12 flex flex-col items-center space-y-10">
         {/* Hero section */}
         {!tender && (
           <motion.section
-            className="text-center py-8 sm:py-14 relative"
+            className="w-full max-w-3xl flex flex-col items-center text-center relative"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -414,16 +412,16 @@ export default function App() {
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-tight sm:leading-[1.15]">
+            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-white max-w-2xl mx-auto leading-tight sm:leading-[1.15]">
               Package Tender PDFs with <span className="bg-gradient-to-r from-[#FF385C] via-[#FF5E7E] to-[#FFA07A] bg-clip-text text-transparent">Zero Friction</span>
             </h1>
 
-            <p className="text-slate-400 text-sm sm:text-lg mt-4 max-w-2xl mx-auto font-normal">
+            <p className="text-slate-400 text-sm sm:text-base mt-4 max-w-xl mx-auto font-normal">
               {t('appDescription')}
             </p>
 
             {/* Feature Highlights Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto mt-8 text-left">
+            <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 text-left">
               <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
                 <ShieldCheck size={18} className="text-[#10B981] mb-1.5" />
                 <p className="text-xs font-semibold text-white">100% Private</p>
@@ -431,8 +429,8 @@ export default function App() {
               </div>
               <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
                 <Zap size={18} className="text-[#FF385C] mb-1.5" />
-                <p className="text-xs font-semibold text-white">SHA-256 Duplicate Lock</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Exact byte twin detection</p>
+                <p className="text-xs font-semibold text-white">SHA-256 Twin Lock</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Exact duplicate defense</p>
               </div>
               <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
                 <FileCheck size={18} className="text-amber-400 mb-1.5" />
@@ -450,12 +448,13 @@ export default function App() {
 
         {/* Step 1: Load JSON */}
         <motion.section
+          className="w-full max-w-2xl flex flex-col items-center space-y-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           {!tender ? (
-            <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="w-full space-y-4">
               <DropZone
                 onFiles={handleJsonFiles}
                 accept=".json"
@@ -466,7 +465,7 @@ export default function App() {
               />
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <motion.button
-                  className="pill-btn pill-btn-accent !py-2.5 !px-5 w-full sm:w-auto justify-center"
+                  className="pill-btn pill-btn-accent !py-2.5 !px-6 w-full sm:w-auto justify-center"
                   onClick={loadSamplePack}
                   disabled={isLoadingSample}
                   whileHover={{ scale: 1.02 }}
@@ -484,7 +483,7 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <TenderCard
                   tender={tender}
@@ -532,9 +531,10 @@ export default function App() {
         {/* After tender is loaded */}
         <AnimatePresence>
           {tender && (
-            <>
+            <div className="w-full space-y-8 flex flex-col items-center">
               {/* Step 2: Upload Files */}
               <motion.section
+                className="w-full"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -581,6 +581,7 @@ export default function App() {
 
               {/* Step 3: Requirements + Matching */}
               <motion.section
+                className="w-full"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -668,6 +669,7 @@ export default function App() {
               {/* Unmatched files */}
               {unmatchedFiles.length > 0 && (
                 <motion.section
+                  className="w-full"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
@@ -693,11 +695,12 @@ export default function App() {
 
               {/* Generate Section */}
               <motion.section
+                className="w-full max-w-lg mx-auto"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35 }}
               >
-                <div className="card max-w-lg mx-auto !p-6 border-[#FF385C]/20 shadow-[0_0_40px_rgba(255,56,92,0.1)]">
+                <div className="card !p-6 border-[#FF385C]/20 shadow-[0_0_40px_rgba(255,56,92,0.1)]">
                   <div className="text-center mb-4">
                     <span className="section-label block">
                       {lang === 'bn' ? 'প্যাকেজ তৈরি ও ডাউনলোড' : 'FINAL PACKAGE COMPILATION'}
@@ -718,7 +721,7 @@ export default function App() {
                   />
                 </div>
               </motion.section>
-            </>
+            </div>
           )}
         </AnimatePresence>
       </main>

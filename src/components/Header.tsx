@@ -12,8 +12,8 @@ export default function Header({ voiceEnabled, onVoiceToggle, voiceSupported }: 
   const { lang, setLang, t } = useLang();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#08080C]/80 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#08080C]/85 backdrop-blur-xl flex justify-center">
+      <div className="w-full max-w-5xl px-4 sm:px-6 py-3.5 flex items-center justify-between">
         {/* Brand */}
         <motion.a
           href="/"
