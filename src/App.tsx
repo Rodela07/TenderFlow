@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Volume2, FileDown, Sparkles, Upload, FileText, CheckCircle2, ShieldCheck, Layers, FileCheck, RefreshCw, Zap } from 'lucide-react';
 import type { Tender, Requirement, UploadedFile, Match, ExpiryDate } from './types';
 import { useLang } from './i18n/LanguageContext';
@@ -117,7 +117,6 @@ export default function App() {
         has_expiry: Boolean(r.has_expiry),
       }));
 
-      // Sort by order (stable), tie-break by id
       parsedReqs.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 
       setTender(parsedTender);
@@ -152,13 +151,11 @@ export default function App() {
     const MAX_FILES = 30;
     const MAX_SIZE = 50 * 1024 * 1024;
 
-    // Check total count
     if (files.length + newFiles.length > MAX_FILES) {
       addToast(t('errorTooManyFiles'), 'error');
       return;
     }
 
-    // Check total size
     const currentSize = files.reduce((sum, f) => sum + f.size, 0);
     const newSize = newFiles.reduce((sum, f) => sum + f.size, 0);
     if (currentSize + newSize > MAX_SIZE) {
@@ -386,7 +383,7 @@ export default function App() {
   }, [files, matches]);
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center selection:bg-[#FF385C]/30 selection:text-white">
+    <div className="w-full min-h-screen flex flex-col selection:bg-[#FF385C]/30 selection:text-white">
       <Header
         voiceEnabled={speech.enabled}
         onVoiceToggle={speech.toggle}
@@ -395,66 +392,43 @@ export default function App() {
 
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
-      <main className="w-full max-w-5xl px-4 sm:px-6 py-8 sm:py-12 flex flex-col items-center space-y-10">
-        {/* Hero section */}
-        {!tender && (
-          <motion.section
-            className="w-full max-w-3xl flex flex-col items-center text-center relative"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Glowing Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-[#FF385C]/30 shadow-[0_0_20px_rgba(255,56,92,0.15)] mb-5">
-              <Sparkles size={14} className="text-[#FF385C] animate-pulse" />
-              <span className="text-xs font-semibold tracking-wide text-slate-200">
-                AI DevFest 2026 &bull; {t('tagline')}
-              </span>
-            </div>
-
-            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-white max-w-2xl mx-auto leading-tight sm:leading-[1.15]">
-              Package Tender PDFs with <span className="bg-gradient-to-r from-[#FF385C] via-[#FF5E7E] to-[#FFA07A] bg-clip-text text-transparent">Zero Friction</span>
-            </h1>
-
-            <p className="text-slate-400 text-sm sm:text-base mt-4 max-w-xl mx-auto font-normal">
-              {t('appDescription')}
-            </p>
-
-            {/* Feature Highlights Grid */}
-            <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 text-left">
-              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-                <ShieldCheck size={18} className="text-[#10B981] mb-1.5" />
-                <p className="text-xs font-semibold text-white">100% Private</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Local browser engine</p>
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-8 py-10 sm:py-16 space-y-12">
+        {/* Landing Hero (When No Tender Loaded) */}
+        {!tender ? (
+          <div className="space-y-12">
+            {/* Hero Header */}
+            <motion.section
+              className="text-center max-w-3xl mx-auto space-y-5"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-[#FF385C]/30 shadow-[0_0_20px_rgba(255,56,92,0.15)]">
+                <Sparkles size={14} className="text-[#FF385C] animate-pulse" />
+                <span className="text-xs font-semibold tracking-wider text-slate-200 uppercase">
+                  AI DevFest 2026 &bull; {t('tagline')}
+                </span>
               </div>
-              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-                <Zap size={18} className="text-[#FF385C] mb-1.5" />
-                <p className="text-xs font-semibold text-white">SHA-256 Twin Lock</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Exact duplicate defense</p>
-              </div>
-              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-                <FileCheck size={18} className="text-amber-400 mb-1.5" />
-                <p className="text-xs font-semibold text-white">Expiry Defense</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Strict deadline checks</p>
-              </div>
-              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-                <Layers size={18} className="text-sky-400 mb-1.5" />
-                <p className="text-xs font-semibold text-white">Cover & Index</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Dynamic running pages</p>
-              </div>
-            </div>
-          </motion.section>
-        )}
 
-        {/* Step 1: Load JSON */}
-        <motion.section
-          className="w-full max-w-2xl flex flex-col items-center space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          {!tender ? (
-            <div className="w-full space-y-4">
+              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+                Package Tender PDFs with{' '}
+                <span className="bg-gradient-to-r from-[#FF385C] via-[#FF5E7E] to-[#FFA07A] bg-clip-text text-transparent">
+                  Zero Friction
+                </span>
+              </h1>
+
+              <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                {t('appDescription')}
+              </p>
+            </motion.section>
+
+            {/* Main Upload Box & Sample Action */}
+            <motion.section
+              className="max-w-2xl mx-auto space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
               <DropZone
                 onFiles={handleJsonFiles}
                 accept=".json"
@@ -463,27 +437,85 @@ export default function App() {
                 label={t('loadJson')}
                 description={t('loadJsonDesc')}
               />
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <motion.button
-                  className="pill-btn pill-btn-accent !py-2.5 !px-6 w-full sm:w-auto justify-center"
+                  className="pill-btn pill-btn-accent !py-3 !px-8 text-sm font-bold w-full sm:w-auto justify-center shadow-[0_0_25px_rgba(255,56,92,0.35)]"
                   onClick={loadSamplePack}
                   disabled={isLoadingSample}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   aria-label={t('loadSample')}
                 >
-                  <Sparkles size={15} />
+                  <Sparkles size={16} />
                   <span>
                     {isLoadingSample
                       ? (lang === 'bn' ? 'ডেমো ডেটা লোড হচ্ছে...' : 'Loading Sample Pack...')
-                      : (lang === 'bn' ? 'ডেমো টেন্ডার প্যাক লোড করুন' : 'Load Complete Sample Pack')
+                      : (lang === 'bn' ? 'সম্পূর্ণ ডেমো টেন্ডার লোড করুন' : 'Load Complete Sample Pack')
                     }
                   </span>
                 </motion.button>
               </div>
-            </div>
-          ) : (
-            <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+            </motion.section>
+
+            {/* Feature Highlights Grid */}
+            <motion.section
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <div className="card !p-5 border-white/[0.06] bg-white/[0.015] hover:border-[#10B981]/40 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-[#10B981]/15 flex items-center justify-center text-[#10B981] mb-3">
+                  <ShieldCheck size={20} />
+                </div>
+                <h4 className="text-sm font-bold text-white">100% Private Engine</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  All PDF processing occurs locally in your browser. Zero cloud uploads.
+                </p>
+              </div>
+
+              <div className="card !p-5 border-white/[0.06] bg-white/[0.015] hover:border-[#FF385C]/40 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-[#FF385C]/15 flex items-center justify-center text-[#FF385C] mb-3">
+                  <Zap size={20} />
+                </div>
+                <h4 className="text-sm font-bold text-white">SHA-256 Twin Defense</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Identical binary files are detected and locked, preventing duplicate matches.
+                </p>
+              </div>
+
+              <div className="card !p-5 border-white/[0.06] bg-white/[0.015] hover:border-amber-500/40 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 mb-3">
+                  <FileCheck size={20} />
+                </div>
+                <h4 className="text-sm font-bold text-white">Expiry Verification</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Strictly validates license dates against the tender submission deadline.
+                </p>
+              </div>
+
+              <div className="card !p-5 border-white/[0.06] bg-white/[0.015] hover:border-sky-500/40 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-sky-400 mb-3">
+                  <Layers size={20} />
+                </div>
+                <h4 className="text-sm font-bold text-white">Auto-Cover & Index</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Compiles official cover page and dynamic table of contents with footers.
+                </p>
+              </div>
+            </motion.section>
+          </div>
+        ) : (
+          /* Active Tender Workspace */
+          <div className="space-y-10">
+            {/* Step 1: Tender Details & Readiness Gauge */}
+            <motion.section
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
               <div className="lg:col-span-2">
                 <TenderCard
                   tender={tender}
@@ -491,8 +523,9 @@ export default function App() {
                   voiceEnabled={speech.enabled}
                 />
               </div>
+
               <div className="card flex flex-col items-center justify-center p-6 relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-36 h-36 bg-[#FF385C]/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FF385C]/15 rounded-full blur-3xl pointer-events-none" />
                 <StatBlock
                   value={readyCount}
                   total={requirements.length}
@@ -502,7 +535,7 @@ export default function App() {
                   <p className={`text-xs font-semibold ${hasBlocking ? 'text-[#FF85A1]' : 'text-[#34D399]'}`}>
                     {hasBlocking ? t('hasBlocking') : t('allClear')}
                   </p>
-                  <div className="flex items-center justify-center gap-2 mt-3">
+                  <div className="flex items-center justify-center gap-2 mt-4">
                     {speech.enabled && (
                       <button
                         onClick={speakSummary}
@@ -515,215 +548,203 @@ export default function App() {
                     )}
                     <button
                       onClick={handleReset}
-                      className="pill-btn !px-3 !py-1 text-xs hover:border-white/30"
-                      title="Reset Tender"
+                      className="pill-btn !px-3.5 !py-1 text-xs hover:border-white/30"
+                      title="Load another tender"
                     >
                       <RefreshCw size={13} />
-                      <span>{lang === 'bn' ? 'রিসেট' : 'Change Tender'}</span>
+                      <span>{lang === 'bn' ? 'নতুন টেন্ডার' : 'Change Tender'}</span>
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </motion.section>
+            </motion.section>
 
-        {/* After tender is loaded */}
-        <AnimatePresence>
-          {tender && (
-            <div className="w-full space-y-8 flex flex-col items-center">
-              {/* Step 2: Upload Files */}
-              <motion.section
-                className="w-full"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35 }}
-              >
-                <div className="card">
-                  <div className="flex items-center justify-between mb-4 border-b border-white/[0.06] pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_8px_#FF385C]" />
-                      <span className="section-label">{t('uploadedFiles')}</span>
-                    </div>
-                    <span className="text-xs font-mono text-slate-400">
-                      {files.length} / 30 files &bull; {(files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(1)} / 50 MB
-                    </span>
+            {/* Step 2: Upload Files */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+            >
+              <div className="card space-y-5">
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FF385C] shadow-[0_0_10px_#FF385C]" />
+                    <span className="section-label">{t('uploadedFiles')}</span>
+                  </div>
+                  <span className="text-xs font-mono text-slate-400">
+                    {files.length} / 30 files &bull; {(files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(1)} / 50 MB
+                  </span>
+                </div>
+
+                <DropZone
+                  onFiles={handlePdfFiles}
+                  accept=".pdf"
+                  multiple={true}
+                  id="pdf-dropzone"
+                  label={t('selectPdfs')}
+                  description={t('uploadDesc')}
+                >
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <Upload size={28} className="text-[#FF385C]" />
+                    <p className="text-sm font-semibold text-white">{t('selectPdfs')}</p>
+                    <p className="text-xs text-slate-400">{t('uploadDesc')}</p>
+                  </div>
+                </DropZone>
+
+                {files.length > 0 && (
+                  <div className="pt-2">
+                    <FileList
+                      files={files}
+                      matches={matches}
+                      duplicateGroups={duplicateGroups}
+                      onRemove={removeFile}
+                    />
+                  </div>
+                )}
+              </div>
+            </motion.section>
+
+            {/* Step 3: Requirements + Matching */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+            >
+              <div className="card space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FF385C] shadow-[0_0_10px_#FF385C]" />
+                    <span className="section-label">{t('matching')}</span>
+                    {speech.enabled && (
+                      <button
+                        onClick={speakRequirements}
+                        className="p-1 rounded-lg hover:bg-white/[0.08] text-slate-400 hover:text-white"
+                        aria-label={t('speakRequirements')}
+                      >
+                        <Volume2 size={14} className="text-[#FF385C]" />
+                      </button>
+                    )}
                   </div>
 
-                  <DropZone
-                    onFiles={handlePdfFiles}
-                    accept=".pdf"
-                    multiple={true}
-                    id="pdf-dropzone"
-                    label={t('selectPdfs')}
-                    description={t('uploadDesc')}
-                  >
-                    <div className="flex flex-col items-center gap-2 py-3">
-                      <Upload size={24} className="text-[#FF385C]" />
-                      <p className="text-sm font-semibold text-white">{t('selectPdfs')}</p>
-                      <p className="text-xs text-slate-400">{t('uploadDesc')}</p>
-                    </div>
-                  </DropZone>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <motion.button
+                      className="pill-btn text-xs hover:border-[#FF385C]"
+                      onClick={handleAutoMatch}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      aria-label={t('autoMatch')}
+                    >
+                      <Sparkles size={13} className="text-[#FF385C]" />
+                      <span>{t('autoMatch')}</span>
+                    </motion.button>
 
-                  {files.length > 0 && (
-                    <div className="mt-5">
-                      <FileList
+                    {suggestions.size > 0 && (
+                      <motion.button
+                        className="pill-btn pill-btn-accent text-xs !py-1.5"
+                        onClick={applyAllSuggestions}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        aria-label={t('applySuggestions')}
+                      >
+                        <CheckCircle2 size={13} />
+                        <span>{t('applySuggestions')} ({suggestions.size})</span>
+                      </motion.button>
+                    )}
+
+                    <motion.button
+                      className="pill-btn text-xs hover:border-white/30"
+                      onClick={handleExportCsv}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      aria-label={t('exportCsv')}
+                    >
+                      <FileDown size={13} />
+                      <span>{t('exportCsv')}</span>
+                    </motion.button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {requirements.map((req, i) => {
+                    const status = statuses.get(req.id) ?? { type: 'missing' as const, blocks: true };
+                    return (
+                      <RequirementRow
+                        key={req.id}
+                        requirement={req}
+                        index={i}
                         files={files}
                         matches={matches}
+                        expiryDates={expiryDates}
+                        status={status}
                         duplicateGroups={duplicateGroups}
-                        onRemove={removeFile}
+                        onMatch={handleMatch}
+                        onExpiryChange={handleExpiryChange}
+                        suggestion={suggestions.get(req.id)}
                       />
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-              </motion.section>
+              </div>
+            </motion.section>
 
-              {/* Step 3: Requirements + Matching */}
+            {/* Unmatched files */}
+            {unmatchedFiles.length > 0 && (
               <motion.section
-                className="w-full"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35 }}
+                transition={{ duration: 0.3 }}
               >
-                <div className="card">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-white/[0.06] pb-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_8px_#FF385C]" />
-                      <span className="section-label">{t('matching')}</span>
-                      {speech.enabled && (
-                        <button
-                          onClick={speakRequirements}
-                          className="p-1 rounded-lg hover:bg-white/[0.08] text-slate-400 hover:text-white"
-                          aria-label={t('speakRequirements')}
-                        >
-                          <Volume2 size={14} className="text-[#FF385C]" />
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <motion.button
-                        className="pill-btn text-xs hover:border-[#FF385C]"
-                        onClick={handleAutoMatch}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        aria-label={t('autoMatch')}
-                      >
-                        <Sparkles size={13} className="text-[#FF385C]" />
-                        <span>{t('autoMatch')}</span>
-                      </motion.button>
-
-                      {suggestions.size > 0 && (
-                        <motion.button
-                          className="pill-btn pill-btn-accent text-xs !py-1.5"
-                          onClick={applyAllSuggestions}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          aria-label={t('applySuggestions')}
-                        >
-                          <CheckCircle2 size={13} />
-                          <span>{t('applySuggestions')} ({suggestions.size})</span>
-                        </motion.button>
-                      )}
-
-                      <motion.button
-                        className="pill-btn text-xs hover:border-white/30"
-                        onClick={handleExportCsv}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        aria-label={t('exportCsv')}
-                      >
-                        <FileDown size={13} />
-                        <span>{t('exportCsv')}</span>
-                      </motion.button>
-                    </div>
+                <div className="card !p-5 bg-white/[0.015]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText size={16} className="text-slate-400" />
+                    <span className="section-label">{t('unmatchedFiles')}</span>
+                    <span className="text-xs font-mono text-slate-400">({unmatchedFiles.length})</span>
                   </div>
-
-                  <div className="space-y-2.5">
-                    {requirements.map((req, i) => {
-                      const status = statuses.get(req.id) ?? { type: 'missing' as const, blocks: true };
-                      return (
-                        <RequirementRow
-                          key={req.id}
-                          requirement={req}
-                          index={i}
-                          files={files}
-                          matches={matches}
-                          expiryDates={expiryDates}
-                          status={status}
-                          duplicateGroups={duplicateGroups}
-                          onMatch={handleMatch}
-                          onExpiryChange={handleExpiryChange}
-                          suggestion={suggestions.get(req.id)}
-                        />
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {unmatchedFiles.map((f) => (
+                      <div key={f.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-black/25 border border-white/[0.05] text-xs text-slate-300">
+                        <FileText size={14} className="text-slate-500 shrink-0" />
+                        <span className="truncate font-medium flex-1">{f.name}</span>
+                        <span className="text-[11px] text-slate-500 shrink-0 font-mono">({f.pageCount}p)</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </motion.section>
+            )}
 
-              {/* Unmatched files */}
-              {unmatchedFiles.length > 0 && (
-                <motion.section
-                  className="w-full"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="card !p-4 bg-white/[0.015]">
-                    <div className="flex items-center gap-2 mb-2.5">
-                      <FileText size={15} className="text-slate-400" />
-                      <span className="section-label">{t('unmatchedFiles')}</span>
-                      <span className="text-xs font-mono text-slate-400">({unmatchedFiles.length})</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                      {unmatchedFiles.map((f) => (
-                        <div key={f.id} className="flex items-center gap-2 p-2 rounded-lg bg-black/20 border border-white/[0.04] text-xs text-slate-300">
-                          <FileText size={13} className="text-slate-500 shrink-0" />
-                          <span className="truncate font-medium flex-1">{f.name}</span>
-                          <span className="text-[10px] text-slate-500 shrink-0">({f.pageCount}p)</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.section>
-              )}
-
-              {/* Generate Section */}
-              <motion.section
-                className="w-full max-w-lg mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35 }}
-              >
-                <div className="card !p-6 border-[#FF385C]/20 shadow-[0_0_40px_rgba(255,56,92,0.1)]">
-                  <div className="text-center mb-4">
-                    <span className="section-label block">
-                      {lang === 'bn' ? 'প্যাকেজ তৈরি ও ডাউনলোড' : 'FINAL PACKAGE COMPILATION'}
-                    </span>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {lang === 'bn'
-                        ? 'কভার পেজ, সূচিপত্র ও সঠিক ক্রমে পৃষ্ঠা নম্বর সহ সম্পূর্ণ PDF তৈরি করুন'
-                        : 'Compiles cover, dynamic index, sorted documents & verified running footers'}
-                    </p>
-                  </div>
-
-                  <GenerateBar
-                    requirements={requirements}
-                    statuses={statuses}
-                    onGenerate={handleGenerate}
-                    isGenerating={isGenerating}
-                    lang={lang}
-                  />
+            {/* Generate Final Package Section */}
+            <motion.section
+              className="max-w-xl mx-auto w-full pt-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+            >
+              <div className="card !p-8 border-[#FF385C]/25 shadow-[0_0_50px_rgba(255,56,92,0.12)]">
+                <div className="text-center mb-6">
+                  <span className="section-label block text-xs">
+                    {lang === 'bn' ? 'চূড়ান্ত প্যাকেজ তৈরি ও ডাউনলোড' : 'FINAL PACKAGE COMPILATION'}
+                  </span>
+                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                    {lang === 'bn'
+                      ? 'কভার পেজ, সূচিপত্র ও সঠিক ক্রমে পৃষ্ঠা নম্বর সহ সম্পূর্ণ PDF তৈরি করুন'
+                      : 'Compiles official cover, dynamic index, sorted documents & verified running footers'}
+                  </p>
                 </div>
-              </motion.section>
-            </div>
-          )}
-        </AnimatePresence>
+
+                <GenerateBar
+                  requirements={requirements}
+                  statuses={statuses}
+                  onGenerate={handleGenerate}
+                  isGenerating={isGenerating}
+                  lang={lang}
+                />
+              </div>
+            </motion.section>
+          </div>
+        )}
       </main>
 
       <Footer />

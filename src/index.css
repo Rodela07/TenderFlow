@@ -10,8 +10,8 @@
 
 @theme {
   --color-dark-base: #08080C;
-  --color-dark-surface: #111118;
-  --color-dark-elevated: #181824;
+  --color-dark-surface: #101017;
+  --color-dark-elevated: #161622;
   --color-light: #F8FAFC;
   --color-muted: #94A3B8;
   --color-accent: #FF385C;
@@ -44,7 +44,6 @@ html, body, #root {
 #root {
   display: flex;
   flex-direction: column;
-  align-items: center;
   width: 100%;
 }
 
@@ -52,9 +51,9 @@ body {
   font-family: 'Poppins', 'Noto Sans Bengali', system-ui, sans-serif;
   background-color: #08080C;
   background-image: 
-    radial-gradient(circle at 50% -10%, rgba(255, 56, 92, 0.16) 0%, transparent 50%),
-    radial-gradient(circle at 90% 40%, rgba(255, 56, 92, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 10% 80%, rgba(255, 56, 92, 0.05) 0%, transparent 40%);
+    radial-gradient(circle at 50% -10%, rgba(255, 56, 92, 0.16) 0%, transparent 60%),
+    radial-gradient(circle at 90% 40%, rgba(255, 56, 92, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 10% 80%, rgba(255, 56, 92, 0.05) 0%, transparent 50%);
   background-attachment: fixed;
   color: var(--color-light);
   line-height: 1.6;
@@ -103,7 +102,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Custom utility classes */
 .section-label {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -111,13 +110,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .card {
-  background: rgba(17, 17, 24, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(16, 16, 23, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.25rem;
-  padding: 1.5rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
 }
@@ -128,19 +127,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .card-glowing {
   border-color: rgba(255, 56, 92, 0.3);
-  box-shadow: 0 0 30px -5px rgba(255, 56, 92, 0.15);
+  box-shadow: 0 0 35px -5px rgba(255, 56, 92, 0.2);
 }
 
 .pill-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
+  padding: 0.55rem 1.35rem;
   border-radius: 9999px;
   font-size: 0.8125rem;
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(24, 24, 36, 0.8);
+  background: rgba(24, 24, 36, 0.85);
   backdrop-filter: blur(10px);
   color: var(--color-light);
   cursor: pointer;
@@ -152,7 +151,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-color: var(--color-accent);
   color: #FFFFFF;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(255, 56, 92, 0.2);
+  box-shadow: 0 4px 16px rgba(255, 56, 92, 0.25);
 }
 
 .pill-btn:disabled {
@@ -172,31 +171,26 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background: linear-gradient(135deg, #FF4D6D 0%, #F43F5E 100%);
   border-color: #FF4D6D;
   color: #FFFFFF;
-  box-shadow: 0 6px 25px rgba(255, 56, 92, 0.5);
+  box-shadow: 0 6px 28px rgba(255, 56, 92, 0.5);
   transform: translateY(-2px);
 }
 
 .stat-numeral {
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: 3.25rem;
+  font-weight: 800;
   line-height: 1;
   background: linear-gradient(135deg, #FFFFFF 0%, #FF85A1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.hairline {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
 .drop-zone {
-  border: 2px dashed rgba(255, 255, 255, 0.14);
-  border-radius: 1.25rem;
-  padding: 2.5rem 1.5rem;
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
   text-align: center;
   transition: all 0.25s ease;
-  background: rgba(17, 17, 24, 0.4);
+  background: rgba(16, 16, 23, 0.4);
   cursor: pointer;
   width: 100%;
 }
@@ -205,14 +199,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .drop-zone.drag-over {
   border-color: var(--color-accent);
   background: rgba(255, 56, 92, 0.06);
-  box-shadow: 0 0 30px rgba(255, 56, 92, 0.12);
+  box-shadow: 0 0 35px rgba(255, 56, 92, 0.15);
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.85rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -299,10 +293,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* Select styling */
 select {
   appearance: none;
-  background: #111118;
+  background: #12121A;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.625rem;
-  padding: 0.45rem 2.25rem 0.45rem 0.875rem;
+  padding: 0.5rem 2.25rem 0.5rem 0.875rem;
   color: var(--color-light);
   font-family: inherit;
   font-size: 0.8125rem;
@@ -311,7 +305,6 @@ select {
   background-repeat: no-repeat;
   background-position: right 0.625rem center;
   background-size: 1rem;
-  max-width: 240px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -321,10 +314,10 @@ select:hover, select:focus {
 }
 
 input[type="date"] {
-  background: #111118;
+  background: #12121A;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.625rem;
-  padding: 0.45rem 0.875rem;
+  padding: 0.5rem 0.875rem;
   color: var(--color-light);
   font-family: inherit;
   font-size: 0.8125rem;
@@ -339,25 +332,11 @@ input[type="date"]:hover, input[type="date"]:focus {
 /* Responsive */
 @media (max-width: 640px) {
   .card {
-    padding: 1.125rem;
-    border-radius: 1rem;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
   }
 
   .stat-numeral {
-    font-size: 2.25rem;
-  }
-
-  select {
-    max-width: 100%;
-    font-size: 0.75rem;
-  }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    font-size: 2.5rem;
   }
 }
