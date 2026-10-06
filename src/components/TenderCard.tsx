@@ -1,15 +1,13 @@
 import { motion } from 'framer-motion';
-import { FileText, Calendar, Building2, User, Hash, Volume2 } from 'lucide-react';
+import { FileText, Calendar, Building2, User, Hash } from 'lucide-react';
 import type { Tender } from '../types';
 import { useLang } from '../i18n/LanguageContext';
 
 interface TenderCardProps {
   tender: Tender;
-  onSpeak?: () => void;
-  voiceEnabled?: boolean;
 }
 
-export default function TenderCard({ tender, onSpeak, voiceEnabled }: TenderCardProps) {
+export default function TenderCard({ tender }: TenderCardProps) {
   const { t } = useLang();
 
   const fields = [
@@ -35,17 +33,6 @@ export default function TenderCard({ tender, onSpeak, voiceEnabled }: TenderCard
           <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_8px_#FF385C]" />
           <span className="section-label">{t('tenderDetails')}</span>
         </div>
-        {voiceEnabled && onSpeak && (
-          <button
-            onClick={onSpeak}
-            className="pill-btn !px-2.5 !py-1 text-xs hover:border-[#FF385C]"
-            aria-label={t('speakTender')}
-            title={t('speakTender')}
-          >
-            <Volume2 size={13} className="text-[#FF385C]" />
-            <span className="hidden sm:inline">Listen</span>
-          </button>
-        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
