@@ -3,6 +3,7 @@ import type { Requirement, UploadedFile, Match, ExpiryDate, Status } from '../ty
 import StatusBadge from './StatusBadge';
 import { useLang } from '../i18n/LanguageContext';
 import { isDuplicateLocked } from '../lib/duplicates';
+import { Calendar, Sparkles } from 'lucide-react';
 
 interface RequirementRowProps {
   requirement: Requirement;
@@ -53,67 +54,97 @@ export default function RequirementRow({
   };
 
   const suggestedFile = suggestion ? files.find((f) => f.id === suggestion) : undefined;
+  const isOk = status.type === 'ok';
 
   return (
     <motion.div
-      className="py-3"
-      initial={{ opacity: 0, y: 16 }}
+      className={`p-4 rounded-xl border transition-all ${
+        isOk
+          ? 'bg-white/[0.015] border-white/[0.06] hover:border-white/[0.12]'
+          : status.blocks
+            ? 'bg-[#FF385C]/[0.02] border-[#FF385C]/20 hover:border-[#FF385C]/40'
+            : 'bg-white/[0.01] border-white/[0.04]'
+      }`}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.07 }}
+      transition={{ duration: 0.25, delay: index * 0.04 }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-        {/* Order number + title */}
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <span className="text-accent font-semibold text-sm tabular-nums shrink-0 mt-0.5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Left: Order badge + Title + Badges */}
+        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+            isOk
+              ? 'bg-[#10B981]/15 text-[#34D399] border border-[#10B981]/30'
+              : 'bg-[#FF385C]/15 text-[#FF385C] border border-[#FF385C]/30'
+          }`}>
             {String(requirement.order).padStart(2, '0')}
-          </span>
+          </div>
+
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium break-words">{title}</p>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                requirement.mandatory
-                  ? 'bg-[rgba(212,96,90,0.1)] text-status-missing'
-                  : 'bg-[rgba(138,138,143,0.1)] text-muted'
-              }`}>
-                {requirement.mandatory ? t('mandatory') : t('optional')}
-              </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-sm font-semibold text-white tracking-tight break-words">
+                {title}
+              </h4>
+              {requirement.mandatory ? (
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#FF385C]/15 text-[#FF85A1] border border-[#FF385C]/25">
+                  {t('mandatory')}
+                </span>
+              ) : (
+                <span className="text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-white/[0.06]">
+                  {t('optional')}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               <StatusBadge type={status.type} />
+              {requirement.has_expiry && (
+                <span className="flex items-center gap-1 text-[11px] text-amber-400/90 font-medium">
+                  <Calendar size={12} />
+                  {t('expiryDate')}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Controls: file select + expiry */}
-        <div className="flex flex-col gap-2 sm:items-end shrink-0">
-          <div className="relative">
+        {/* Right: Select File & Expiry picker */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <div className="flex flex-col gap-1">
             <select
               value={currentMatch?.fileId ?? ''}
               onChange={handleSelectChange}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-56"
               aria-label={`${t('selectFile')} - ${title}`}
             >
               <option value="">{t('selectFile')}</option>
               {availableFiles.map((f) => (
-                <option key={f.id} value={f.id}>{f.name}</option>
+                <option key={f.id} value={f.id}>{f.name} ({f.pageCount}p)</option>
               ))}
             </select>
+
             {suggestedFile && !currentMatch && (
               <button
                 onClick={() => onMatch(requirement.id, suggestedFile.id)}
-                className="mt-1 text-xs text-accent hover:underline"
+                className="flex items-center gap-1 text-[11px] text-[#FF85A1] hover:text-[#FF385C] transition-colors mt-0.5"
               >
-                {t('suggestedMatch')}: {suggestedFile.name}
+                <Sparkles size={11} />
+                <span>{t('suggestedMatch')}: {suggestedFile.name}</span>
               </button>
             )}
           </div>
 
           {requirement.has_expiry && currentMatch && (
-            <input
-              type="date"
-              value={currentExpiry?.date ?? ''}
-              onChange={(e) => onExpiryChange(requirement.id, e.target.value)}
-              className="w-full sm:w-auto"
-              aria-label={`${t('expiryDate')} - ${title}`}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                type="date"
+                value={currentExpiry?.date ?? ''}
+                onChange={(e) => onExpiryChange(requirement.id, e.target.value)}
+                className="w-full sm:w-40"
+                aria-label={`${t('expiryDate')} - ${title}`}
+                title={t('expiryDate')}
+              />
+            </div>
           )}
         </div>
       </div>

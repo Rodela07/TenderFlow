@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, FileDown, Sparkles, Upload, FileText } from 'lucide-react';
+import { Volume2, FileDown, Sparkles, Upload, FileText, CheckCircle2, ShieldCheck, Layers, FileCheck, RefreshCw, Zap } from 'lucide-react';
 import type { Tender, Requirement, UploadedFile, Match, ExpiryDate } from './types';
 import { useLang } from './i18n/LanguageContext';
 import { getPdfPageCount } from './lib/pdfCount';
@@ -43,8 +43,6 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<Map<string, string>>(new Map());
   const [isLoadingSample, setIsLoadingSample] = useState(false);
-
-
 
   // Derived state
   const duplicateGroups = useMemo(() =>
@@ -198,8 +196,9 @@ export default function App() {
 
     if (processed.length > 0) {
       setFiles((prev) => [...prev, ...processed]);
+      addToast(lang === 'bn' ? `${processed.length}টি ফাইল যুক্ত করা হয়েছে` : `${processed.length} file(s) added`, 'info');
     }
-  }, [files, addToast, t]);
+  }, [files, addToast, t, lang]);
 
   const handlePdfFiles = useCallback((fileList: File[]) => {
     processFiles(fileList);
@@ -254,20 +253,35 @@ export default function App() {
     }
     const newSuggestions = autoMatch(files, requirements, matches, lockedFileIds);
     setSuggestions(newSuggestions);
-  }, [files, requirements, matches, duplicateGroups]);
+    if (newSuggestions.size > 0) {
+      addToast(lang === 'bn' ? `${newSuggestions.size}টি নথির প্রস্তাবনা পাওয়া গেছে` : `${newSuggestions.size} auto-match suggestions found`, 'info');
+    } else {
+      addToast(lang === 'bn' ? 'কোনো নতুন ম্যাচ পাওয়া যায়নি' : 'No new match suggestions found', 'info');
+    }
+  }, [files, requirements, matches, duplicateGroups, addToast, lang]);
 
   const applyAllSuggestions = useCallback(() => {
     setMatches((prev) => {
       let next = [...prev];
       for (const [reqId, fileId] of suggestions) {
-        // Remove any existing match for this requirement or file
         next = next.filter((m) => m.requirementId !== reqId && m.fileId !== fileId);
         next.push({ requirementId: reqId, fileId });
       }
       return next;
     });
     setSuggestions(new Map());
-  }, [suggestions]);
+    addToast(lang === 'bn' ? 'প্রস্তাবিত ম্যাচগুলি প্রয়োগ করা হয়েছে' : 'Applied all suggestions', 'success');
+  }, [suggestions, addToast, lang]);
+
+  // Reset / Clear
+  const handleReset = useCallback(() => {
+    setTender(null);
+    setRequirements([]);
+    setFiles([]);
+    setMatches([]);
+    setExpiryDates([]);
+    setSuggestions(new Map());
+  }, []);
 
   // Generate
   const handleGenerate = useCallback(async () => {
@@ -285,7 +299,7 @@ export default function App() {
         downloadPdf(pdfBytes, `${tender.tender_id}_Package.pdf`);
         addToast(lang === 'bn' ? 'প্যাকেজ সফলভাবে তৈরি হয়েছে' : 'Package generated successfully', 'success');
       }
-    } catch (err) {
+    } catch {
       addToast(t('errorGeneric'), 'error');
     } finally {
       setIsGenerating(false);
@@ -296,19 +310,18 @@ export default function App() {
   const handleExportCsv = useCallback(() => {
     if (!tender) return;
     exportChecklistCsv(requirements, matches, files, expiryDates, statuses, lang);
-  }, [requirements, matches, files, expiryDates, statuses, lang, tender]);
+    addToast(lang === 'bn' ? 'CSV চেকলিস্ট ডাউনলোড করা হয়েছে' : 'Exported checklist CSV', 'success');
+  }, [requirements, matches, files, expiryDates, statuses, lang, tender, addToast]);
 
   // Load sample pack
   const loadSamplePack = useCallback(async () => {
     setIsLoadingSample(true);
     try {
-      // Fetch requirements.json
       const reqRes = await fetch('/sample/requirements.json');
       if (!reqRes.ok) throw new Error('404');
       const reqText = await reqRes.text();
       parseAndLoadJson(reqText);
 
-      // Fetch document files
       const sampleFiles = [
         'financial_proposal.pdf',
         'technical_proposal.pdf',
@@ -332,7 +345,7 @@ export default function App() {
           const file = new File([blob], name, { type: blob.type });
           fileObjects.push(file);
         } catch {
-          // Skip individual file failures
+          // Ignore individual fetch fails
         }
       }
 
@@ -375,7 +388,7 @@ export default function App() {
   }, [files, matches]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col selection:bg-[#FF385C]/30 selection:text-white">
       <Header
         voiceEnabled={speech.enabled}
         onVoiceToggle={speech.toggle}
@@ -384,33 +397,65 @@ export default function App() {
 
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
         {/* Hero section */}
         {!tender && (
           <motion.section
-            className="text-center py-12"
-            initial={{ opacity: 0, y: 24 }}
+            className="text-center py-8 sm:py-14 relative"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <span className="section-label">[ {t('tagline')} ]</span>
-            <h1 className="text-3xl sm:text-5xl font-bold mt-3 leading-tight">
-              {t('appTitle')}
+            {/* Glowing Pill Tag */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-[#FF385C]/30 shadow-[0_0_20px_rgba(255,56,92,0.15)] mb-5">
+              <Sparkles size={14} className="text-[#FF385C] animate-pulse" />
+              <span className="text-xs font-semibold tracking-wide text-slate-200">
+                AI DevFest 2026 &bull; {t('tagline')}
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-tight sm:leading-[1.15]">
+              Package Tender PDFs with <span className="bg-gradient-to-r from-[#FF385C] via-[#FF5E7E] to-[#FFA07A] bg-clip-text text-transparent">Zero Friction</span>
             </h1>
-            <p className="text-muted text-sm sm:text-base mt-3 max-w-lg mx-auto">
+
+            <p className="text-slate-400 text-sm sm:text-lg mt-4 max-w-2xl mx-auto font-normal">
               {t('appDescription')}
             </p>
+
+            {/* Feature Highlights Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto mt-8 text-left">
+              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+                <ShieldCheck size={18} className="text-[#10B981] mb-1.5" />
+                <p className="text-xs font-semibold text-white">100% Private</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Local browser engine</p>
+              </div>
+              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+                <Zap size={18} className="text-[#FF385C] mb-1.5" />
+                <p className="text-xs font-semibold text-white">SHA-256 Duplicate Lock</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Exact byte twin detection</p>
+              </div>
+              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+                <FileCheck size={18} className="text-amber-400 mb-1.5" />
+                <p className="text-xs font-semibold text-white">Expiry Defense</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Strict deadline checks</p>
+              </div>
+              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+                <Layers size={18} className="text-sky-400 mb-1.5" />
+                <p className="text-xs font-semibold text-white">Cover & Index</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Dynamic running pages</p>
+              </div>
+            </div>
           </motion.section>
         )}
 
         {/* Step 1: Load JSON */}
         <motion.section
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          transition={{ duration: 0.4 }}
         >
           {!tender ? (
-            <div className="space-y-3">
+            <div className="space-y-4 max-w-2xl mx-auto">
               <DropZone
                 onFiles={handleJsonFiles}
                 accept=".json"
@@ -419,19 +464,22 @@ export default function App() {
                 label={t('loadJson')}
                 description={t('loadJsonDesc')}
               />
-              <div className="flex justify-center">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <motion.button
-                  className="pill-btn"
+                  className="pill-btn pill-btn-accent !py-2.5 !px-5 w-full sm:w-auto justify-center"
                   onClick={loadSamplePack}
                   disabled={isLoadingSample}
-                  whileHover={{ y: -2 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   aria-label={t('loadSample')}
                 >
-                  <Sparkles size={14} />
-                  {isLoadingSample
-                    ? (lang === 'bn' ? 'লোড হচ্ছে...' : 'Loading...')
-                    : t('loadSample')
-                  }
+                  <Sparkles size={15} />
+                  <span>
+                    {isLoadingSample
+                      ? (lang === 'bn' ? 'ডেমো ডেটা লোড হচ্ছে...' : 'Loading Sample Pack...')
+                      : (lang === 'bn' ? 'ডেমো টেন্ডার প্যাক লোড করুন' : 'Load Complete Sample Pack')
+                    }
+                  </span>
                 </motion.button>
               </div>
             </div>
@@ -444,25 +492,37 @@ export default function App() {
                   voiceEnabled={speech.enabled}
                 />
               </div>
-              <div className="space-y-4">
-                <div className="card flex flex-col items-center justify-center gap-2 h-full">
-                  <StatBlock
-                    value={readyCount}
-                    total={requirements.length}
-                    label={t('documentsReady')}
-                  />
-                  <p className="text-xs text-muted mt-2 text-center">
+              <div className="card flex flex-col items-center justify-center p-6 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-36 h-36 bg-[#FF385C]/10 rounded-full blur-2xl pointer-events-none" />
+                <StatBlock
+                  value={readyCount}
+                  total={requirements.length}
+                  label={t('documentsReady')}
+                />
+                <div className="mt-2 text-center">
+                  <p className={`text-xs font-semibold ${hasBlocking ? 'text-[#FF85A1]' : 'text-[#34D399]'}`}>
                     {hasBlocking ? t('hasBlocking') : t('allClear')}
                   </p>
-                  {speech.enabled && (
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    {speech.enabled && (
+                      <button
+                        onClick={speakSummary}
+                        className="pill-btn !px-3 !py-1 text-xs"
+                        aria-label={t('speakSummary')}
+                      >
+                        <Volume2 size={13} className="text-[#FF385C]" />
+                        <span>Listen</span>
+                      </button>
+                    )}
                     <button
-                      onClick={speakSummary}
-                      className="pill-btn !px-2 !py-1 mt-1"
-                      aria-label={t('speakSummary')}
+                      onClick={handleReset}
+                      className="pill-btn !px-3 !py-1 text-xs hover:border-white/30"
+                      title="Reset Tender"
                     >
-                      <Volume2 size={14} className="text-accent" />
+                      <RefreshCw size={13} />
+                      <span>{lang === 'bn' ? 'রিসেট' : 'Change Tender'}</span>
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -475,16 +535,19 @@ export default function App() {
             <>
               {/* Step 2: Upload Files */}
               <motion.section
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
+                transition={{ duration: 0.35 }}
               >
                 <div className="card">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="section-label">[ {t('uploadedFiles')} ]</span>
-                    <span className="text-xs text-muted">
-                      {files.length} / 30 {t('documents').toLowerCase()}
+                  <div className="flex items-center justify-between mb-4 border-b border-white/[0.06] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_8px_#FF385C]" />
+                      <span className="section-label">{t('uploadedFiles')}</span>
+                    </div>
+                    <span className="text-xs font-mono text-slate-400">
+                      {files.length} / 30 files &bull; {(files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(1)} / 50 MB
                     </span>
                   </div>
 
@@ -497,14 +560,14 @@ export default function App() {
                     description={t('uploadDesc')}
                   >
                     <div className="flex flex-col items-center gap-2 py-3">
-                      <Upload size={24} className="text-muted" />
-                      <p className="text-sm font-medium">{t('selectPdfs')}</p>
-                      <p className="text-xs text-muted">{t('uploadDesc')}</p>
+                      <Upload size={24} className="text-[#FF385C]" />
+                      <p className="text-sm font-semibold text-white">{t('selectPdfs')}</p>
+                      <p className="text-xs text-slate-400">{t('uploadDesc')}</p>
                     </div>
                   </DropZone>
 
                   {files.length > 0 && (
-                    <div className="mt-4">
+                    <div className="mt-5">
                       <FileList
                         files={files}
                         matches={matches}
@@ -518,61 +581,68 @@ export default function App() {
 
               {/* Step 3: Requirements + Matching */}
               <motion.section
-                className="light-band -mx-4 sm:-mx-6 px-4 sm:px-6 py-8 rounded-none"
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
+                transition={{ duration: 0.35 }}
               >
-                <div className="max-w-6xl mx-auto">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="section-label text-text-on-light">[ {t('requirements')} ]</span>
+                <div className="card">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-white/[0.06] pb-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_8px_#FF385C]" />
+                      <span className="section-label">{t('matching')}</span>
                       {speech.enabled && (
                         <button
                           onClick={speakRequirements}
-                          className="p-1 rounded-lg hover:bg-[rgba(20,20,20,0.05)] text-muted"
+                          className="p-1 rounded-lg hover:bg-white/[0.08] text-slate-400 hover:text-white"
                           aria-label={t('speakRequirements')}
                         >
-                          <Volume2 size={14} />
+                          <Volume2 size={14} className="text-[#FF385C]" />
                         </button>
                       )}
                     </div>
+
                     <div className="flex items-center gap-2 flex-wrap">
                       <motion.button
-                        className="pill-btn !bg-white !text-text-on-light !border-[rgba(20,20,20,0.12)]"
+                        className="pill-btn text-xs hover:border-[#FF385C]"
                         onClick={handleAutoMatch}
-                        whileHover={{ y: -1 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         aria-label={t('autoMatch')}
                       >
-                        <Sparkles size={14} />
-                        {t('autoMatch')}
+                        <Sparkles size={13} className="text-[#FF385C]" />
+                        <span>{t('autoMatch')}</span>
                       </motion.button>
+
                       {suggestions.size > 0 && (
                         <motion.button
-                          className="pill-btn !bg-[#C9AEB4] !text-[#141414] !border-[#C9AEB4]"
+                          className="pill-btn pill-btn-accent text-xs !py-1.5"
                           onClick={applyAllSuggestions}
-                          whileHover={{ y: -1 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           aria-label={t('applySuggestions')}
                         >
-                          {t('applySuggestions')} ({suggestions.size})
+                          <CheckCircle2 size={13} />
+                          <span>{t('applySuggestions')} ({suggestions.size})</span>
                         </motion.button>
                       )}
+
                       <motion.button
-                        className="pill-btn !bg-white !text-text-on-light !border-[rgba(20,20,20,0.12)]"
+                        className="pill-btn text-xs hover:border-white/30"
                         onClick={handleExportCsv}
-                        whileHover={{ y: -1 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         aria-label={t('exportCsv')}
                       >
-                        <FileDown size={14} />
-                        {t('exportCsv')}
+                        <FileDown size={13} />
+                        <span>{t('exportCsv')}</span>
                       </motion.button>
                     </div>
                   </div>
 
-                  <div className="divide-y divide-[rgba(20,20,20,0.08)]">
+                  <div className="space-y-2.5">
                     {requirements.map((req, i) => {
                       const status = statuses.get(req.id) ?? { type: 'missing' as const, blocks: true };
                       return (
@@ -598,22 +668,22 @@ export default function App() {
               {/* Unmatched files */}
               {unmatchedFiles.length > 0 && (
                 <motion.section
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.35 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <div className="card">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FileText size={16} className="text-muted" />
-                      <span className="section-label">[ {t('unmatchedFiles')} ]</span>
-                      <span className="text-xs text-muted">({unmatchedFiles.length})</span>
+                  <div className="card !p-4 bg-white/[0.015]">
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <FileText size={15} className="text-slate-400" />
+                      <span className="section-label">{t('unmatchedFiles')}</span>
+                      <span className="text-xs font-mono text-slate-400">({unmatchedFiles.length})</span>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                       {unmatchedFiles.map((f) => (
-                        <div key={f.id} className="flex items-center gap-2 text-xs text-muted">
-                          <FileText size={12} />
-                          <span className="truncate">{f.name}</span>
-                          <span>({f.pageCount} {f.pageCount === 1 ? t('page') : t('pages')})</span>
+                        <div key={f.id} className="flex items-center gap-2 p-2 rounded-lg bg-black/20 border border-white/[0.04] text-xs text-slate-300">
+                          <FileText size={13} className="text-slate-500 shrink-0" />
+                          <span className="truncate font-medium flex-1">{f.name}</span>
+                          <span className="text-[10px] text-slate-500 shrink-0">({f.pageCount}p)</span>
                         </div>
                       ))}
                     </div>
@@ -621,16 +691,24 @@ export default function App() {
                 </motion.section>
               )}
 
-              {/* Generate */}
+              {/* Generate Section */}
               <motion.section
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.4 }}
+                transition={{ duration: 0.35 }}
               >
-                <div className="card max-w-md mx-auto">
-                  <span className="section-label block text-center mb-4">
-                    [ {lang === 'bn' ? 'প্যাকেজ তৈরি' : 'GENERATE PACKAGE'} ]
-                  </span>
+                <div className="card max-w-lg mx-auto !p-6 border-[#FF385C]/20 shadow-[0_0_40px_rgba(255,56,92,0.1)]">
+                  <div className="text-center mb-4">
+                    <span className="section-label block">
+                      {lang === 'bn' ? 'প্যাকেজ তৈরি ও ডাউনলোড' : 'FINAL PACKAGE COMPILATION'}
+                    </span>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {lang === 'bn'
+                        ? 'কভার পেজ, সূচিপত্র ও সঠিক ক্রমে পৃষ্ঠা নম্বর সহ সম্পূর্ণ PDF তৈরি করুন'
+                        : 'Compiles cover, dynamic index, sorted documents & verified running footers'}
+                    </p>
+                  </div>
+
                   <GenerateBar
                     requirements={requirements}
                     statuses={statuses}
