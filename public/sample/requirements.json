@@ -1,0 +1,75 @@
+{
+  "tender": {
+    "tender_id": "PROC-2026-0042",
+    "title": "Supply and Installation of Office Network Equipment",
+    "procuring_entity": "Bangladesh Public Procurement Authority",
+    "bidder": "TechConnect Solutions Ltd.",
+    "submission_deadline": "2026-03-15"
+  },
+  "requirements": [
+    {
+      "id": "doc-trade-license",
+      "order": 1,
+      "title_en": "Trade License",
+      "title_bn": "ট্রেড লাইসেন্স",
+      "mandatory": true,
+      "has_expiry": true
+    },
+    {
+      "id": "doc-tin",
+      "order": 2,
+      "title_en": "TIN Certificate",
+      "title_bn": "টিআইএন সার্টিফিকেট",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "doc-vat",
+      "order": 3,
+      "title_en": "VAT Registration Certificate",
+      "title_bn": "ভ্যাট নিবন্ধন সার্টিফিকেট",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "doc-bank-solvency",
+      "order": 4,
+      "title_en": "Bank Solvency Certificate",
+      "title_bn": "ব্যাংক সচ্ছলতা সার্টিফিকেট",
+      "mandatory": true,
+      "has_expiry": true
+    },
+    {
+      "id": "doc-experience",
+      "order": 5,
+      "title_en": "Experience Certificate",
+      "title_bn": "অভিজ্ঞতা সার্টিফিকেট",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "doc-technical",
+      "order": 6,
+      "title_en": "Technical Proposal",
+      "title_bn": "কারিগরি প্রস্তাব",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "doc-financial",
+      "order": 7,
+      "title_en": "Financial Proposal",
+      "title_bn": "আর্থিক প্রস্তাব",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "doc-company-profile",
+      "order": 8,
+      "title_en": "Company Profile",
+      "title_bn": "কোম্পানি প্রোফাইল",
+      "mandatory": false,
+      "has_expiry": false
+    }
+  ]
+}
