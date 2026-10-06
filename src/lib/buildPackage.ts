@@ -6,12 +6,25 @@ function drawFooter(page: PDFPage, font: PDFFont, tenderId: string, pageNum: num
   const text = `${tenderId} | Page ${pageNum} of ${totalPages}`;
   const fontSize = 9;
   const textWidth = font.widthOfTextAtSize(text, fontSize);
+  const x = (width - textWidth) / 2;
+  const y = 16;
+
+  // Subtle clean pill background backing to guarantee readability over source PDFs
+  page.drawRectangle({
+    x: x - 6,
+    y: y - 4,
+    width: textWidth + 12,
+    height: 16,
+    color: rgb(1, 1, 1),
+    opacity: 0.9,
+  });
+
   page.drawText(text, {
-    x: (width - textWidth) / 2,
-    y: 18,
+    x,
+    y,
     size: fontSize,
     font,
-    color: rgb(0.55, 0.55, 0.55),
+    color: rgb(0.2, 0.2, 0.2),
   });
 }
 
@@ -80,9 +93,7 @@ export async function buildPackage(
 
     const createdDate = new Date().toISOString().split('T')[0];
 
-    // === PHASE 1: Build pages ===
-
-    // Cover page
+    // === PHASE 1: Build Cover Page (Page 1) ===
     const coverPage = outputPdf.addPage([595.28, 841.89]); // A4
     const coverLines = buildCoverPageContent(tender, includedDocs, createdDate);
     let yPos = 780;
@@ -119,11 +130,10 @@ export async function buildPackage(
       }
     }
 
-    // Track page counts for index
+    // Track page counts for Index Page (Page 2)
     const docPageInfo: Array<{ order: number; title: string; startPage: number; pageCount: number }> = [];
-    let currentPageNum = 2; // Cover is page 1, index is page 2
+    let currentStartPage = 3; // Cover is page 1, Index is page 2 -> First doc starts on page 3
 
-    // First pass: gather page info for the index page
     for (const req of matchedReqs) {
       const match = matches.find((m) => m.requirementId === req.id);
       if (!match) continue;
@@ -133,13 +143,13 @@ export async function buildPackage(
       docPageInfo.push({
         order: req.order,
         title: req.title_en,
-        startPage: currentPageNum + 1, // +1 because index page will be inserted
+        startPage: currentStartPage,
         pageCount: uploadedFile.pageCount,
       });
-      currentPageNum += uploadedFile.pageCount;
+      currentStartPage += uploadedFile.pageCount;
     }
 
-    // Index page
+    // Index page (Page 2)
     const indexPage = outputPdf.addPage([595.28, 841.89]);
     const indexLines = buildIndexPageContent(docPageInfo);
     let iyPos = 780;
@@ -176,7 +186,7 @@ export async function buildPackage(
       }
     }
 
-    // Copy document pages in order
+    // === PHASE 2: Copy document pages in ascending order ===
     for (const req of matchedReqs) {
       const match = matches.find((m) => m.requirementId === req.id);
       if (!match) continue;
@@ -197,7 +207,7 @@ export async function buildPackage(
       }
     }
 
-    // === PHASE 2: Stamp footers ===
+    // === PHASE 3: Stamp footers on EVERY page with actual total ===
     const allPages = outputPdf.getPages();
     const totalPages = allPages.length;
     for (let i = 0; i < totalPages; i++) {

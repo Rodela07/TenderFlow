@@ -29,11 +29,15 @@ export function computeStatus(
   }
   if (hasFile && requirement.has_expiry) {
     const expiryEntry = expiryDates.find((e) => e.requirementId === requirement.id);
-    if (!expiryEntry || !expiryEntry.date) {
+    if (!expiryEntry || !expiryEntry.date || !expiryEntry.date.trim()) {
       return { type: 'expiry_needed', blocks: true };
     }
-    // Compare YYYY-MM-DD strings directly (lexicographic works for ISO dates)
-    if (expiryEntry.date < submissionDeadline) {
+    
+    // Normalize dates to YYYY-MM-DD for comparison
+    const cleanDeadline = submissionDeadline.trim().slice(0, 10);
+    const cleanExpiry = expiryEntry.date.trim().slice(0, 10);
+    
+    if (cleanExpiry < cleanDeadline) {
       return { type: 'expired', blocks: true };
     }
   }
